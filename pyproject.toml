@@ -1,0 +1,73 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "segcompare"
+version = "1.0.0"
+description = "CLI tool to compare two segmentation masks and calculate Dice, Hausdorff, volume metrics"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Javier Urriola Yaksic", email = "jurriolayak@users.noreply.github.com"}
+]
+maintainers = [
+    {name = "Javier Urriola Yaksic", email = "jurriolayak@users.noreply.github.com"}
+]
+keywords = [
+    "segmentation",
+    "medical-imaging",
+    "dice-coefficient",
+    "hausdorff-distance",
+    "nifti",
+    "neuroimaging",
+    "mri",
+    "ct",
+    "comparison",
+    "metrics"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Healthcare Industry",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+    "Topic :: Scientific/Engineering :: Image Processing",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "numpy>=1.20.0",
+    "nibabel>=3.0.0",
+    "scipy>=1.6.0",
+]
+
+[project.optional-dependencies]
+fast = [
+    "surface-distance",  # DeepMind's accurate surface distance library
+]
+dev = [
+    "pytest>=6.0",
+    "pytest-cov",
+]
+
+[project.urls]
+Homepage = "https://github.com/jurriolayak/segcompare"
+Repository = "https://github.com/jurriolayak/segcompare"
+Issues = "https://github.com/jurriolayak/segcompare/issues"
+
+[project.scripts]
+segcompare = "segcompare.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"

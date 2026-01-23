@@ -75,3 +75,4 @@ venv.bak/
 *.nii
 *.nii.gz
 !tests/data/*.nii.gz
+src/segcompare.egg-info/

@@ -16,6 +16,7 @@ CLI usage:
 
 from .metrics import (
     compare_masks,
+    compare_masks_by_labels,
     calculate_dice,
     calculate_volume_similarity,
     calculate_surface_metrics,
@@ -27,6 +28,7 @@ __email__ = "jurriolayak@users.noreply.github.com"
 
 __all__ = [
     "compare_masks",
+    "compare_masks_by_labels",
     "calculate_dice",
     "calculate_volume_similarity",
     "calculate_surface_metrics",

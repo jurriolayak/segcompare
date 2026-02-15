@@ -139,6 +139,34 @@ def calculate_surface_metrics(mask1, mask2, voxel_spacing):
     return {'hd95': hd95, 'asd': asd}
 
 
+def _compare_binary_masks(mask1_bin, mask2_bin, voxel_spacing):
+    """Calculate all metrics from two binary masks."""
+    voxel_volume = np.prod(voxel_spacing)
+
+    dice = calculate_dice(mask1_bin, mask2_bin)
+    vol_sim = calculate_volume_similarity(mask1_bin, mask2_bin)
+
+    vol1 = np.sum(mask1_bin) * voxel_volume
+    vol2 = np.sum(mask2_bin) * voxel_volume
+
+    overlap = np.sum(mask1_bin & mask2_bin) * voxel_volume
+    union = np.sum(mask1_bin | mask2_bin) * voxel_volume
+    jaccard = overlap / union if union > 0 else 0.0
+
+    surf_metrics = calculate_surface_metrics(mask1_bin, mask2_bin, voxel_spacing)
+
+    return {
+        'dice': float(dice),
+        'jaccard': float(jaccard),
+        'volume_similarity': float(vol_sim),
+        'hd95_mm': float(surf_metrics['hd95']),
+        'asd_mm': float(surf_metrics['asd']),
+        'volume1_mm3': float(vol1),
+        'volume2_mm3': float(vol2),
+        'overlap_mm3': float(overlap),
+    }
+
+
 def compare_masks(path1, path2):
     """
     Load two masks and calculate all comparison metrics.
@@ -187,41 +215,88 @@ def compare_masks(path1, path2):
     
     # Get voxel spacing from first image
     voxel_spacing = img1.header.get_zooms()[:3]
-    voxel_volume = np.prod(voxel_spacing)  # mm³ per voxel
-    
-    # Binarize
-    mask1_bin = mask1 > 0
-    mask2_bin = mask2 > 0
-    
     # Check shapes match
     if mask1.shape != mask2.shape:
         raise ValueError(f"Shape mismatch: {mask1.shape} vs {mask2.shape}")
-    
-    # Calculate metrics
-    dice = calculate_dice(mask1_bin, mask2_bin)
-    vol_sim = calculate_volume_similarity(mask1_bin, mask2_bin)
-    
-    vol1 = np.sum(mask1_bin) * voxel_volume
-    vol2 = np.sum(mask2_bin) * voxel_volume
-    
-    overlap = np.sum(mask1_bin & mask2_bin) * voxel_volume
-    union = np.sum(mask1_bin | mask2_bin) * voxel_volume
-    jaccard = overlap / union if union > 0 else 0.0
-    
-    # Surface metrics
-    surf_metrics = calculate_surface_metrics(mask1_bin, mask2_bin, voxel_spacing)
-    
+
+    metrics = _compare_binary_masks(mask1 > 0, mask2 > 0, voxel_spacing)
+
     return {
         'mask1': str(path1),
         'mask2': str(path2),
-        'dice': float(dice),
-        'jaccard': float(jaccard),
-        'volume_similarity': float(vol_sim),
-        'hd95_mm': float(surf_metrics['hd95']),
-        'asd_mm': float(surf_metrics['asd']),
-        'volume1_mm3': float(vol1),
-        'volume2_mm3': float(vol2),
-        'overlap_mm3': float(overlap),
+        **metrics,
+        'voxel_spacing_mm': list(voxel_spacing),
+        'shape': list(mask1.shape),
+    }
+
+
+def compare_masks_by_labels(path1, path2, labels):
+    """
+    Load two masks and calculate metrics per label index.
+
+    Parameters
+    ----------
+    path1 : str or Path
+        Path to first mask
+    path2 : str or Path
+        Path to second mask
+    labels : dict[int, str]
+        Mapping of label index -> label name
+    """
+    img1 = nib.load(str(path1))
+    img2 = nib.load(str(path2))
+
+    mask1 = img1.get_fdata()
+    mask2 = img2.get_fdata()
+
+    if mask1.shape != mask2.shape:
+        raise ValueError(f"Shape mismatch: {mask1.shape} vs {mask2.shape}")
+
+    voxel_spacing = img1.header.get_zooms()[:3]
+    rows = []
+    warnings = []
+
+    for label_idx, label_name in labels.items():
+        label_mask1 = mask1 == label_idx
+        label_mask2 = mask2 == label_idx
+
+        sum1 = np.sum(label_mask1)
+        sum2 = np.sum(label_mask2)
+
+        if sum1 == 0:
+            warnings.append(
+                f'Warning: no label {label_idx} ("{label_name}") in {path1}'
+            )
+        if sum2 == 0:
+            warnings.append(
+                f'Warning: no label {label_idx} ("{label_name}") in {path2}'
+            )
+
+        if sum1 == 0 and sum2 == 0:
+            metrics = {
+                'dice': float('nan'),
+                'jaccard': float('nan'),
+                'volume_similarity': float('nan'),
+                'hd95_mm': float('nan'),
+                'asd_mm': float('nan'),
+                'volume1_mm3': 0.0,
+                'volume2_mm3': 0.0,
+                'overlap_mm3': 0.0,
+            }
+        else:
+            metrics = _compare_binary_masks(label_mask1, label_mask2, voxel_spacing)
+
+        rows.append({
+            'label_idx': int(label_idx),
+            'label_name': label_name,
+            **metrics,
+        })
+
+    return {
+        'mask1': str(path1),
+        'mask2': str(path2),
+        'rows': rows,
+        'warnings': warnings,
         'voxel_spacing_mm': list(voxel_spacing),
         'shape': list(mask1.shape),
     }

@@ -41,7 +41,10 @@ def test_compare_masks_by_labels_keeps_running_with_missing_roi(tmp_path):
 
     assert len(results["rows"]) == 2
     assert results["rows"][0]["dice"] == 1.0
-    assert any('no label 2 ("ROI 2")' in warning for warning in results["warnings"])
+    assert set(results["warnings"]) == {
+        f'Warning: no label 2 ("ROI 2") in {mask1}',
+        f'Warning: no label 2 ("ROI 2") in {mask2}',
+    }
 
 
 def test_cli_label_mode_outputs_csv(tmp_path, monkeypatch):

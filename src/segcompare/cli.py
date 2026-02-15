@@ -106,7 +106,7 @@ def load_label_file(path):
         line = raw_line.strip()
         if not line or line.startswith('#'):
             continue
-        match = re.search(r'^\s*(\d+)\b.*?"([^"]+)"', raw_line)
+        match = re.search(r'^(\d+)\b.*?"([^"]+)"', line)
         if match:
             labels[int(match.group(1))] = match.group(2)
     if not labels:
@@ -190,10 +190,11 @@ Install surface-distance for more accurate HD95/ASD:
     parser.add_argument('-o', '--output', type=str, help='Save results to file')
     parser.add_argument('-q', '--quiet', action='store_true', help='Minimal output (just DSC)')
     parser.add_argument('-l', '--labels', type=str, help='Path to label file (.txt or .label)')
-    parser.add_argument('-dice', action='store_true', help='Per-label Dice metric (requires -l)')
-    parser.add_argument('-hd', action='store_true', help='Per-label HD95 metric (requires -l)')
-    parser.add_argument('-jaccard', action='store_true', help='Per-label Jaccard metric (requires -l)')
-    parser.add_argument('-all', action='store_true', help='Per-label Dice, Jaccard and HD95 (requires -l)')
+    metric_group = parser.add_mutually_exclusive_group()
+    metric_group.add_argument('-dice', action='store_true', help='Per-label Dice metric (requires -l)')
+    metric_group.add_argument('-hd', action='store_true', help='Per-label HD95 metric (requires -l)')
+    metric_group.add_argument('-jaccard', action='store_true', help='Per-label Jaccard metric (requires -l)')
+    metric_group.add_argument('-all', action='store_true', help='Per-label Dice, Jaccard and HD95 (requires -l)')
     parser.add_argument('--version', action='version', version='%(prog)s 1.0.0')
     
     args = parser.parse_args()
@@ -205,11 +206,11 @@ Install surface-distance for more accurate HD95/ASD:
     if not Path(args.mask2).exists():
         print(f"Error: File not found: {args.mask2}", file=sys.stderr)
         sys.exit(1)
-    if args.labels and Path(args.labels).suffix.lower() not in {'.txt', '.label'}:
-        print("Error: -l/--labels file must be .txt or .label", file=sys.stderr)
-        sys.exit(1)
     if args.labels and not Path(args.labels).exists():
         print(f"Error: File not found: {args.labels}", file=sys.stderr)
+        sys.exit(1)
+    if args.labels and Path(args.labels).suffix.lower() not in {'.txt', '.label'}:
+        print("Error: -l/--labels file must be .txt or .label", file=sys.stderr)
         sys.exit(1)
 
     if any([args.dice, args.hd, args.jaccard, args.all]) and not args.labels:

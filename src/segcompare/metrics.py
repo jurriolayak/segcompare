@@ -260,19 +260,36 @@ def compare_masks_by_labels(path1, path2, labels):
         label_mask1 = mask1 == label_idx
         label_mask2 = mask2 == label_idx
 
-        if np.sum(label_mask1) == 0:
+        sum1 = np.sum(label_mask1)
+        sum2 = np.sum(label_mask2)
+
+        if sum1 == 0:
             warnings.append(
                 f'Warning: no label {label_idx} ("{label_name}") in {path1}'
             )
-        if np.sum(label_mask2) == 0:
+        if sum2 == 0:
             warnings.append(
                 f'Warning: no label {label_idx} ("{label_name}") in {path2}'
             )
 
+        if sum1 == 0 and sum2 == 0:
+            metrics = {
+                'dice': float('nan'),
+                'jaccard': float('nan'),
+                'volume_similarity': float('nan'),
+                'hd95_mm': float('nan'),
+                'asd_mm': float('nan'),
+                'volume1_mm3': 0.0,
+                'volume2_mm3': 0.0,
+                'overlap_mm3': 0.0,
+            }
+        else:
+            metrics = _compare_binary_masks(label_mask1, label_mask2, voxel_spacing)
+
         rows.append({
             'label_idx': int(label_idx),
             'label_name': label_name,
-            **_compare_binary_masks(label_mask1, label_mask2, voxel_spacing),
+            **metrics,
         })
 
     return {

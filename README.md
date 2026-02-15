@@ -1,15 +1,15 @@
 # segcompare
 
-A command-line tool to compare two segmentation masks and calculate common evaluation metrics used in medical image segmentation.
+A command-line tool for comparing two segmentation masks and calculating common evaluation metrics used in medical image segmentation.
 
 ## Features
 
-- **Dice Similarity Coefficient (DSC)** - Overlap metric (0-1, higher is better)
-- **Jaccard Index (IoU)** - Intersection over Union
-- **Volume Similarity** - How similar the volumes are
-- **95th Percentile Hausdorff Distance (HD95)** - Surface distance metric in mm
-- **Average Surface Distance (ASD)** - Mean surface distance in mm
-- **Volume measurements** - In mm³
+- **Dice Similarity Coefficient (DSC)** — overlap metric (0–1, higher is better)
+- **Jaccard Index (IoU)** — intersection over union
+- **Volume Similarity** — quantifies volumetric agreement between masks
+- **95th Percentile Hausdorff Distance (HD95)** — robust surface distance metric in mm
+- **Average Surface Distance (ASD)** — mean surface distance in mm
+- **Volume measurements** — reported in mm³
 
 ## Installation
 
@@ -43,7 +43,8 @@ pip install -e .
 segcompare mask1.nii.gz mask2.nii.gz
 ```
 
-Output:
+Example output:
+
 ```
 ============================================================
   SEGMENTATION COMPARISON RESULTS
@@ -90,30 +91,31 @@ segcompare mask1.nii.gz mask2.nii.gz --csv
 # Save to file
 segcompare mask1.nii.gz mask2.nii.gz -o results.csv
 
-# Quiet mode (just DSC value)
+# Quiet mode (DSC value only)
 segcompare mask1.nii.gz mask2.nii.gz -q
 ```
 
 ### Per-structure metrics with label files
 
+segcompare supports ITK-SNAP style label files (`.txt` or `.label`) for per-structure evaluation:
+
 ```bash
-# ITK-SnAP style label file (.txt or .label)
 segcompare mask1.nii.gz mask2.nii.gz -l labels.txt -dice
 segcompare mask1.nii.gz mask2.nii.gz -l labels.txt -jaccard
 segcompare mask1.nii.gz mask2.nii.gz -l labels.txt -hd
 segcompare mask1.nii.gz mask2.nii.gz -l labels.txt -all --csv
 ```
 
-When a label from the label file is missing in one of the masks, segcompare prints a warning and continues.
+If a label defined in the label file is missing from one of the masks, segcompare prints a warning and continues processing the remaining structures.
 
-### Scripting example
+### Scripting examples
 
 ```bash
 # Get just the Dice coefficient for scripting
 dice=$(segcompare mask1.nii.gz mask2.nii.gz -q)
 echo "Dice: $dice"
 
-# Process multiple files
+# Batch processing
 for pred in predictions/*.nii.gz; do
     name=$(basename "$pred" .nii.gz)
     segcompare "ground_truth/${name}.nii.gz" "$pred" --csv >> results.csv
@@ -130,38 +132,35 @@ print(f"Dice: {results['dice']:.4f}")
 print(f"HD95: {results['hd95_mm']:.2f} mm")
 ```
 
-## Metrics Explained
+## Metrics
 
-| Metric | Range | Best Value | Description |
-|--------|-------|------------|-------------|
-| DSC | 0-1 | 1 | Dice Similarity Coefficient, measures overlap |
-| IoU | 0-1 | 1 | Jaccard Index, intersection over union |
-| VS | 0-1 | 1 | Volume Similarity, penalizes volume differences |
-| HD95 | 0-∞ mm | 0 | 95th percentile of surface distances |
-| ASD | 0-∞ mm | 0 | Average of all surface distances |
+| Metric | Range | Ideal | Description |
+|--------|-------|-------|-------------|
+| DSC | 0–1 | 1 | Dice Similarity Coefficient; measures spatial overlap |
+| IoU | 0–1 | 1 | Jaccard Index; intersection over union |
+| VS | 0–1 | 1 | Volume Similarity; penalises volume differences |
+| HD95 | 0–inf mm | 0 | 95th percentile of symmetric surface distances |
+| ASD | 0–inf mm | 0 | Mean of all symmetric surface distances |
 
-## Supported Formats
+## Supported formats
 
-- NIfTI (.nii, .nii.gz)
-- Any format supported by nibabel
+Any format supported by [nibabel](https://nipy.org/nibabel/), including NIfTI (`.nii`, `.nii.gz`).
 
 ## Requirements
 
-- Python ≥ 3.8
+- Python >= 3.8
 - numpy
 - nibabel
 - scipy
+- surface-distance (optional) — DeepMind's library for more accurate HD95/ASD calculation
 
-Optional:
-- surface-distance (DeepMind) - for more accurate HD95/ASD calculation
+## Licence
 
-## License
-
-MIT License - see [LICENSE](LICENSE) file.
+MIT Licence. See [LICENSE](LICENSE) for details.
 
 ## Author
 
-Javier Urriola Yaksic  
+Javier Urriola Yaksic
 GitHub: [@jurriolayak](https://github.com/jurriolayak)
 
 ## Citation

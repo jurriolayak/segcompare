@@ -94,6 +94,18 @@ segcompare mask1.nii.gz mask2.nii.gz -o results.csv
 segcompare mask1.nii.gz mask2.nii.gz -q
 ```
 
+### Per-structure metrics with label files
+
+```bash
+# ITK-SnAP style label file (.txt or .label)
+segcompare mask1.nii.gz mask2.nii.gz -l labels.txt -dice
+segcompare mask1.nii.gz mask2.nii.gz -l labels.txt -jaccard
+segcompare mask1.nii.gz mask2.nii.gz -l labels.txt -hd
+segcompare mask1.nii.gz mask2.nii.gz -l labels.txt -all --csv
+```
+
+When a label from the label file is missing in one of the masks, segcompare prints a warning and continues.
+
 ### Scripting example
 
 ```bash
